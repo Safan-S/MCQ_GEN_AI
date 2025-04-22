@@ -1,4 +1,3 @@
-# === flask_mcq_api/api.py ===
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import psycopg2
@@ -20,14 +19,14 @@ def get_mcqs():
     conn = get_connection()
     cur = conn.cursor()
     query = '''
-        SELECT q.id, q.question_text, q.correct_option,
+        SELECT q.question_id, q.question_text, q.correct_option,
                json_agg(json_build_object('option_label', o.option_label, 'option_text', o.option_text)) AS options
         FROM questions q
-        JOIN options o ON q.id = o.question_id
+        JOIN options o ON q.question_id = o.question_id  -- Updated this line
         JOIN subjects s ON q.subject_id = s.id
         JOIN models m ON q.model_id = m.id
         WHERE s.subject_name = %s AND m.model_name = %s
-        GROUP BY q.id
+        GROUP BY q.question_id  -- Updated this line
     '''
     cur.execute(query, (subject, model))
     rows = cur.fetchall()
@@ -37,7 +36,7 @@ def get_mcqs():
     mcqs = []
     for row in rows:
         mcqs.append({
-            "question_id": row[0],
+            "question_id": row[0],  # Updated to match the new column name
             "question_text": row[1],
             "correct_option": row[2],
             "options": row[3]
