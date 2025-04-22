@@ -9,7 +9,7 @@ class MCQApp:
         st.set_page_config(page_title="MCQ Practice App", layout="wide")
 
         self.subjects = ["Artificial Intelligence", "Data Structure", "Computer Networks", "Operating System", "Software Engineering",
-                         "DBMS", "Algorithms", "Web Programing", "C++", "Machine Lerning"]
+                         "DBMS", "Algorithms", "Web Programing", "C++", "Machine Learning"]
         self.models = [
             "Google/gemini-2.0-flash",
             "nvidia/llama-3.1-nemotron-ultra-253b-v1:free",
