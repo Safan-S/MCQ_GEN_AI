@@ -18,16 +18,16 @@ def get_mcqs():
 
     conn = get_connection()
     cur = conn.cursor()
-    
     query = '''
-        SELECT q.question_id, q.question_text, q.correct_option,
+        SELECT q.question_id, q.question_text, a.correct_option, 
                json_agg(json_build_object('option_label', o.option_label, 'option_text', o.option_text)) AS options
         FROM questions q
-        JOIN options o ON q.question_id = o.question_id  -- Joining on correct column
-        JOIN subjects s ON q.subject_id = s.subject_id  -- Corrected column for subject_id
-        JOIN models m ON q.model_id = m.model_id  -- Corrected column for model_id
+        JOIN options o ON q.question_id = o.question_id
+        JOIN answers a ON q.question_id = a.question_id  -- Join with answers table to get correct_option
+        JOIN subjects s ON q.subject_id = s.subject_id
+        JOIN models m ON q.model_id = m.model_id
         WHERE s.subject_name = %s AND m.model_name = %s
-        GROUP BY q.question_id  -- Group by question_id to avoid aggregation issues
+        GROUP BY q.question_id, a.correct_option
     '''
     cur.execute(query, (subject, model))
     rows = cur.fetchall()
@@ -37,7 +37,7 @@ def get_mcqs():
     mcqs = []
     for row in rows:
         mcqs.append({
-            "question_id": row[0],  # Using question_id as per schema
+            "question_id": row[0],
             "question_text": row[1],
             "correct_option": row[2],
             "options": row[3]
