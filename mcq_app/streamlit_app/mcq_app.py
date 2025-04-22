@@ -9,7 +9,7 @@ class MCQApp:
         st.set_page_config(page_title="MCQ Practice App", layout="wide")
 
         self.subjects = ["Artificial Intelligence", "Data Structure", "Computer Networks", "Operating System", "Software Engineering",
-                         "DBMS", "Algorithms", "Web Programing", "C++", "Machine Learning"]
+                         "DBMS", "Algorithms", "Web Programming", "C++", "Machine Learning"]
         self.models = [
             "Google/gemini-2.0-flash",
             "nvidia/llama-3.1-nemotron-ultra-253b-v1:free",
@@ -47,7 +47,10 @@ class MCQApp:
 
             for idx, q in enumerate(mcqs):
                 st.markdown(f"**{idx+1}. {q['question_text']}**")
-                options_dict = {opt['option_label']: opt['option_text'] for opt in q['options']}
+
+                # Sort options by label A, B, C, D
+                sorted_options = sorted(q['options'], key=lambda x: x['option_label'])
+                options_dict = {opt['option_label']: opt['option_text'] for opt in sorted_options}
 
                 selected = st.radio(
                     "Choose an answer:",
