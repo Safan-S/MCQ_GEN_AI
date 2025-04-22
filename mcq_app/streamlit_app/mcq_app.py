@@ -1,8 +1,8 @@
 import streamlit as st
 import requests
 
-MCQ_API_URL = "https://mcq-api.onrender.com"
-RATING_API_URL = "https://mcq-rating-api.onrender.com"
+MCQ_API_URL = "https://mcq-gen-ai.onrender.com"
+RATING_API_URL = "https://mcq-gen-ai-ratings.onrender.com"
 
 class MCQApp:
     def __init__(self):
