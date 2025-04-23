@@ -4,66 +4,76 @@ import psycopg2
 import os
 import logging
 
-app = Flask(__name__)
-CORS(app)
 
-# --- Logging ---
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+class RatingAPI:
+    def __init__(self):
+        self.app = Flask(__name__)
+        CORS(self.app)
 
-# --- Database URL from environment ---
-DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable not set")
+        self.setup_logging()
+        self.database_url = os.getenv("DATABASE_URL")
 
-def get_connection():
-    return psycopg2.connect(DATABASE_URL)
+        if not self.database_url:
+            raise ValueError("DATABASE_URL environment variable not set")
 
-@app.route('/submit_rating', methods=['POST'])
-def submit_rating():
-    try:
-        data = request.json
-        logger.info(f"Received rating data: {data}")
+        self.setup_routes()
 
-        # Required fields
-        required_fields = [
-            'model_id', 'model_name', 'subject_id', 'subject_name',
-            'grammatical_fluency', 'answerability', 'complexity',
-            'relevance', 'repetability', 'repetability_in_answers'
-        ]
+    def setup_logging(self):
+        logging.basicConfig(level=logging.INFO)
+        self.logger = logging.getLogger(__name__)
 
-        # Check for missing fields
-        for field in required_fields:
-            if field not in data:
-                logger.error(f"Missing field: {field}")
-                return jsonify({"error": f"Missing field: {field}"}), 400
+    def get_connection(self):
+        return psycopg2.connect(self.database_url)
 
-        # Convert all values to strings for compatibility
-        values = [str(data[field]) for field in required_fields]
+    def setup_routes(self):
+        @self.app.route('/submit_rating', methods=['POST'])
+        def submit_rating():
+            return self.handle_rating_submission()
 
-        # Insert into mcq_ratings table
-        conn = get_connection()
-        cur = conn.cursor()
-        cur.execute('''
-            INSERT INTO mcq_ratings (
-                model_id, model_name, subject_id, subject_name,
-                grammatical_fluency, answerability, complexity,
-                relevance, repetability, repetability_in_answers,
-                submitted_at
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
-        ''', values)
+    def handle_rating_submission(self):
+        try:
+            data = request.json
+            self.logger.info(f"Received rating data: {data}")
 
-        conn.commit()
-        cur.close()
-        conn.close()
+            required_fields = [
+                'model_id', 'model_name', 'subject_id', 'subject_name',
+                'grammatical_fluency', 'answerability', 'complexity',
+                'relevance', 'repetability', 'repetability_in_answers'
+            ]
 
-        logger.info("Rating submitted successfully.")
-        return jsonify({"message": "Rating submitted successfully"}), 201
+            for field in required_fields:
+                if field not in data:
+                    self.logger.error(f"Missing field: {field}")
+                    return jsonify({"error": f"Missing field: {field}"}), 400
 
-    except Exception as e:
-        logger.exception("Error while submitting rating")
-        return jsonify({"error": str(e)}), 500
+            values = [str(data[field]) for field in required_fields]
 
-# --- Run the app ---
+            conn = self.get_connection()
+            cur = conn.cursor()
+            cur.execute('''
+                INSERT INTO mcq_ratings (
+                    model_id, model_name, subject_id, subject_name,
+                    grammatical_fluency, answerability, complexity,
+                    relevance, repetability, repetability_in_answers,
+                    submitted_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+            ''', values)
+            conn.commit()
+            cur.close()
+            conn.close()
+
+            self.logger.info("Rating submitted successfully.")
+            return jsonify({"message": "Rating submitted successfully"}), 201
+
+        except Exception as e:
+            self.logger.exception("Error while submitting rating")
+            return jsonify({"error": str(e)}), 500
+
+    def run(self, host='0.0.0.0', port=5000):
+        self.app.run(host=host, port=port)
+
+
+# --- Start the API ---
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    api = RatingAPI()
+    api.run()
