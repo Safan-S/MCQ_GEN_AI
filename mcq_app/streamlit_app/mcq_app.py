@@ -123,7 +123,7 @@ class MCQApp:
         if response.status_code == 201:
             st.success(" Thanks for your feedback!")
             st.session_state.rated = True
-            st.experimental_rerun()
+            st.rerun()  # Replaces deprecated st.experimental_rerun()
         else:
             st.error(" Failed to submit rating. Try again.")
 
